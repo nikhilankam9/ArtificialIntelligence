@@ -12,6 +12,7 @@ class Cell(enum.Enum):
     pengu = 'P'
     bear = 'U'
     shark = 'S'
+    death = 'X'
     empty = ''
 
 inputTxt = []
@@ -35,6 +36,7 @@ class Game:
     score = 0
     total_fish = 0
     moves = []
+
 
     def __init__(self, r, c) -> None:
         self.row = r
@@ -73,6 +75,11 @@ class Game:
             c = random.choice(availableDirections)
         return c
 
+    def recordPenguDeath(self):
+        self.penguDeathX = self.penguX
+        self.penguDeathY = self.penguY
+
+
     def slide(self, direction: int) -> None:
         while True:
             self.printBoard()
@@ -93,6 +100,7 @@ class Game:
             elif self.nextCell(direction) == Cell.bear or self.nextCell(direction) == Cell.shark:
                 self.state = GAME_OVER
                 self.movePengu(direction)
+                self.recordPenguDeath()
                 break
 
             elif self.nextCell(direction) == Cell.snow:
@@ -144,11 +152,23 @@ def main():
     print(game.all_moves())
 
     with open(sys.argv[2], 'w') as file:
-        s = ""
-        for m in game.all_moves():
-            s += str(m)
-        file.write(s + '\n')
+        file.write("".join((map(str, game.all_moves()))) + '\n')
         file.write(str(game.score) + '\n')
+        for r, row in enumerate(game.board):
+            s = ""
+            for c, col in enumerate(row):
+                if game.state == GAME_OVER:
+                    if r == game.penguDeathX and c == game.penguDeathY:
+                        s += Cell.death.value
+                    else:
+                        s += col.value
+                else:
+                    if r == game.penguX and c == game.penguY:
+                        s += Cell.pengu.value
+                    else:
+                        s += col.value
+            s += '\n'
+            file.write(s)
 
 if __name__ == "__main__":
     main()
