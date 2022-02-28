@@ -111,11 +111,11 @@ class Game:
         Returns:
             int: encoded direction value
         """
-        availableDirections = DIRECTIONS.copy()
-        c = random.choice(availableDirections)
+        available_directions = DIRECTIONS.copy()
+        c = random.choice(available_directions)
         while self.next_cell(c) == Cell.wall:
-            availableDirections.remove(c)
-            c = random.choice(availableDirections)
+            available_directions.remove(c)
+            c = random.choice(available_directions)
         return c
 
     # helper functions
