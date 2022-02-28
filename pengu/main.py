@@ -4,6 +4,12 @@ import enum
 import random
 import time
 
+# constants
+DIRECTIONS = [1, 2, 3, 4, 6, 7, 8, 9]
+BEGIN = "begin"
+GAME_OVER = "game_over"
+VICTORY = "victory"
+
 class Cell(enum.Enum):
     wall = '#'
     ice = ' '
@@ -16,11 +22,6 @@ class Cell(enum.Enum):
     empty = ''
 
 inputTxt = []
-
-DIRECTIONS = [1, 2, 3, 4, 6, 7, 8, 9]
-BEGIN = "begin"
-GAME_OVER = "game_over"
-VICTORY = "victory"
 
 if len(sys.argv) != 3:
     sys.exit('ERROR: invalid number of arguments')
@@ -37,12 +38,11 @@ class Game:
     total_fish = 0
     moves = []
 
-
     def __init__(self, r, c) -> None:
         self.row = r
         self.col = c
-        self.board = [[Cell.empty for c1 in range(c)] for r1 in range(r)]
-        self.direction = {1: [1, -1], 2: [1,  0], 3: [1,  1], 4: [0, -1], 6: [0,  1], 7: [-1, -1], 8: [-1,  0], 9: [-1,  1]}
+        self.board = [[Cell.empty for _ in range(c)] for _ in range(r)]
+        self.directions = {1: [1, -1], 2: [1,  0], 3: [1,  1], 4: [0, -1], 6: [0,  1], 7: [-1, -1], 8: [-1,  0], 9: [-1,  1]}
 
     def fillBoard(self, elements: str, row: int) -> None:
         for col, element in enumerate(elements):
@@ -54,36 +54,22 @@ class Game:
             if Cell(element) == Cell.ice_with_fish:
                 self.total_fish += 1
 
-    def all_moves(self):
-        return self.moves
+    def play(self):
+        iterator = 6
+        while iterator > 0:
+            move = self.nextValidRandomMove()
+            # print("move: ", move)
+            self.moves.append(move)
+            self.slide(move)
 
-    def nextCell(self, dir: int):
-        return self.board[self.penguX + self.direction[dir][0]][self.penguY + self.direction[dir][1]]
-
-    def updateNextCell(self, dir: int, toCell: Cell):
-        self.board[self.penguX + self.direction[dir][0]][self.penguY + self.direction[dir][1]] = toCell
-
-    def movePengu(self, dir: int):
-        self.penguX += self.direction[dir][0]
-        self.penguY += self.direction[dir][1]
-
-    def nextValidRandomMove(self) -> int:
-        availableDirections = DIRECTIONS.copy()
-        c = random.choice(availableDirections)
-        while self.nextCell(c) == Cell.wall:
-            availableDirections.remove(c)
-            c = random.choice(availableDirections)
-        return c
-
-    def recordPenguDeath(self):
-        self.penguDeathX = self.penguX
-        self.penguDeathY = self.penguY
-
+            if self.state == VICTORY or self.state == GAME_OVER:
+                break
+            iterator -= 1
 
     def slide(self, direction: int) -> None:
         while True:
-            self.printBoard()
-            time.sleep(1)
+            # self.printBoard()
+            # time.sleep(1)
             if self.nextCell(direction) == Cell.wall:
                 break
 
@@ -107,23 +93,37 @@ class Game:
                 self.movePengu(direction)
                 break
 
+    def nextValidRandomMove(self) -> int:
+        availableDirections = DIRECTIONS.copy()
+        c = random.choice(availableDirections)
+        while self.nextCell(c) == Cell.wall:
+            availableDirections.remove(c)
+            c = random.choice(availableDirections)
+        return c
 
-    def play(self):
-        iterator = 6
-        while iterator > 0:
-            move = self.nextValidRandomMove()
-            print("move: ", move)
-            self.moves.append(move)
-            self.slide(move)
+    # helper functions
+    # return the element in the next cell
+    def nextCell(self, direction: int):
+        return self.board[self.penguX + self.directions[direction][0]][self.penguY + self.directions[direction][1]]
 
-            if self.state == VICTORY or self.state == GAME_OVER:
-                break
-            iterator -= 1
+    def updateNextCell(self, direction: int, toCell: Cell):
+        self.board[self.penguX + self.directions[direction][0]][self.penguY + self.directions[direction][1]] = toCell
 
+    def movePengu(self, direction: int):
+        self.penguX += self.directions[direction][0]
+        self.penguY += self.directions[direction][1]
+
+    def all_moves(self):
+        return self.moves
+
+    def recordPenguDeath(self):
+        self.penguDeathX = self.penguX
+        self.penguDeathY = self.penguY
 
     def penguLocation(self):
         return self.penguX, self.penguY
 
+    # utility functions
     def info(self) -> None:
         print("Rows:", self.row)
         print("Columns:", self.col)
@@ -133,23 +133,30 @@ class Game:
         print("------------")
         for r, row in enumerate(self.board):
             for c, col in enumerate(row):
-                if r == self.penguX and c == self.penguY:
-                    print(Cell.pengu.value, end=",")
+                if self.state == GAME_OVER:
+                    if r == self.penguDeathX and c == self.penguDeathY:
+                        print(Cell.death.value, end=",")
+                    else:
+                        print(col.value, end=",")
                 else:
-                    print(col.value, end=",")
+                    if r == self.penguX and c == self.penguY:
+                        print(Cell.pengu.value, end=",")
+                    else:
+                        print(col.value, end=",")
             print()
         print("------------")
 
 def main():
     if len(inputTxt) == 0:
-        sys.exit('ERROR: invalid input file data')
+        sys.exit('ERROR: invalid input file')
 
     game = Game(int(inputTxt[0].split(' ')[0]), int(inputTxt[0].split(' ')[1]))
     for row, elements in enumerate(inputTxt[1:]):
         game.fillBoard(elements=elements[:-1], row= row)
 
     game.play()
-    print(game.all_moves())
+    # print(game.all_moves())
+    # game.printBoard()
 
     with open(sys.argv[2], 'w') as file:
         file.write("".join((map(str, game.all_moves()))) + '\n')
