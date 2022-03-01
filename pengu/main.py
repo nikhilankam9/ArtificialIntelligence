@@ -99,7 +99,7 @@ class Game:
                 self.state = GAME_OVER
                 self.move_pengu(direction)
                 self.record_pengu_death()
-                break
+                break #no sliding corpses
 
             elif self.next_cell(direction) == Cell.snow:
                 self.move_pengu(direction)
@@ -154,7 +154,6 @@ class Game:
         self.print_board()
 
     def print_board(self) -> None:
-        print("------------")
         for r, row in enumerate(self.board):
             for c, col in enumerate(row):
                 if self.state == GAME_OVER:
@@ -168,7 +167,7 @@ class Game:
                     else:
                         print(col.value, end=",")
             print()
-        print("------------")
+        print()
 
 def main():
     if len(input_text) == 0:
