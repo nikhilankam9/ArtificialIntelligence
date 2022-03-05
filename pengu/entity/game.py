@@ -1,11 +1,9 @@
 import random
-from common import constants, common
+from entity.board import Board
+from common import constants
+from common.common import Cell
 
-class Board:
-    def __init__(self, r, c) -> None:
-        self.row = r
-        self.col = c
-        self.grid = [[common.Cell.empty for _ in range(c)] for _ in range(r)]
+
 
 class Game:
     """Game class: Defines the game pengu and enables playing it.
@@ -18,23 +16,23 @@ class Game:
     def __init__(self, r, c) -> None:
         self.row = r
         self.col = c
-        self.board = [[common.Cell.empty for _ in range(c)] for _ in range(r)]
+        self.board = Board(r, c)
         self.directions = {1: [1, -1], 2: [1,  0], 3: [1,  1], 4: [0, -1], 6: [0,  1], 7: [-1, -1], 8: [-1,  0], 9: [-1,  1]}
 
-    def fill_board(self, elements: str, row: int) -> None:
+    def fill_board(self, elements: str, r: int) -> None:
         """Function to populate the data from the input file
 
         Args:
             elements (str): text from a single row parsed from input file
-            row (int): number of the row
+            r (int): number of the row
         """
-        for col, element in enumerate(elements):
-            self.board[row][col] = common.Cell(element)
-            if self.board[row][col] == common.Cell.pengu:
-                self.board[row][col] = common.Cell.ice #pengu always starts on ice
-                self.pengu_x = row
-                self.pengu_y = col
-            if common.Cell(element) == common.Cell.ice_with_fish:
+        for c, element in enumerate(elements):
+            self.board.update(r, c, element)
+            if self.board.get(r, c) == Cell.pengu:
+                self.board.update(r, c, Cell.ice) #pengu always starts on ice
+                self.pengu_x = r
+                self.pengu_y = c
+            if Cell(element) == Cell.ice_with_fish:
                 self.total_fish += 1
 
     def play(self):
@@ -55,26 +53,26 @@ class Game:
             direction (int): encoded direction
         """
         while True:
-            if self.next_cell(direction) == common.Cell.wall:
+            if self.next_cell(direction) == Cell.wall:
                 break
 
-            elif self.next_cell(direction) == common.Cell.ice_with_fish:
+            elif self.next_cell(direction) == Cell.ice_with_fish:
                 self.score += 1
                 if self.score == self.total_fish:
                     self.state = constants.VICTORY
-                self.update_next_cell(direction, common.Cell.ice)
+                self.update_next_cell(direction, Cell.ice)
                 self.move_pengu(direction)
 
-            elif self.next_cell(direction) == common.Cell.ice:
+            elif self.next_cell(direction) == Cell.ice:
                 self.move_pengu(direction)
                 
-            elif self.next_cell(direction) == common.Cell.bear or self.next_cell(direction) == common.Cell.shark:
+            elif self.next_cell(direction) == Cell.bear or self.next_cell(direction) == Cell.shark:
                 self.state = constants.GAME_OVER
                 self.move_pengu(direction)
                 self.record_pengu_death()
                 break #no sliding corpses
 
-            elif self.next_cell(direction) == common.Cell.snow:
+            elif self.next_cell(direction) == Cell.snow:
                 self.move_pengu(direction)
                 break
 
@@ -86,13 +84,13 @@ class Game:
         """
         available_directions = constants.DIRECTIONS.copy()
         c = random.choice(available_directions)
-        while self.next_cell(c) == common.Cell.wall:
+        while self.next_cell(c) == Cell.wall:
             available_directions.remove(c)
             c = random.choice(available_directions)
         return c
 
     # helper functions
-    def next_cell(self, direction: int) -> common.Cell:
+    def next_cell(self, direction: int) -> Cell:
         """Helper function to check the element if a move is made in the 'direction'
 
         Args:
@@ -101,10 +99,10 @@ class Game:
         Returns:
             Cell: Human readable representation of the board element
         """
-        return self.board[self.pengu_x + self.directions[direction][0]][self.pengu_y + self.directions[direction][1]]
+        return self.board.get(self.pengu_x + self.directions[direction][0], self.pengu_y + self.directions[direction][1])
 
-    def update_next_cell(self, direction: int, toCell: common.Cell):
-        self.board[self.pengu_x + self.directions[direction][0]][self.pengu_y + self.directions[direction][1]] = toCell
+    def update_next_cell(self, direction: int, toCell: Cell):
+        self.board.update(self.pengu_x + self.directions[direction][0], self.pengu_y + self.directions[direction][1], toCell)
 
     def move_pengu(self, direction: int):
         self.pengu_x += self.directions[direction][0]
@@ -127,16 +125,16 @@ class Game:
         self.print_board()
 
     def print_board(self) -> None:
-        for r, row in enumerate(self.board):
+        for r, row in enumerate(self.board.layout()):
             for c, col in enumerate(row):
                 if self.state == constants.GAME_OVER:
                     if r == self.pengu_death_x and c == self.pengu_death_y:
-                        print(common.Cell.death.value, end=",")
+                        print(Cell.death.value, end=",")
                     else:
                         print(col.value, end=",")
                 else:
                     if r == self.pengu_x and c == self.pengu_y:
-                        print(common.Cell.pengu.value, end=",")
+                        print(Cell.pengu.value, end=",")
                     else:
                         print(col.value, end=",")
             print()
