@@ -14,3 +14,11 @@ class Board:
 
     def layout(self):
         return self.grid
+
+    def clone(self):
+        copy = Board(self.row, self.col)
+        for i in range(self.row):
+            for j in range(self.col):
+                copy.grid[i][j] = self.grid[i][j]
+        
+        return copy

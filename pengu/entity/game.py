@@ -3,8 +3,6 @@ from entity.board import Board
 from common import constants
 from common.common import Cell
 
-
-
 class Game:
     """Game class: Defines the game pengu and enables playing it.
     """
@@ -12,16 +10,32 @@ class Game:
     score = 0
     total_fish = 0
     moves = []
+    pengu_x = -1
+    pengu_y = -1
+    pengu_death_x = -1
+    pengu_death_y = -1
 
     def __init__(self, r, c) -> None:
         self.row = r
         self.col = c
         self.board = Board(r, c)
-        self.directions = {1: [1, -1], 2: [1,  0], 3: [1,  1], 4: [0, -1], 6: [0,  1], 7: [-1, -1], 8: [-1,  0], 9: [-1,  1]}
+
+    def clone(self):
+        copy = Game(self.row, self.col)
+        copy.score = self.score
+        copy.total_fish = self.total_fish
+        copy.moves = self.moves.copy()
+        copy.board = self.board.clone()
+        copy.state = self.state
+        copy.pengu_x = self.pengu_x
+        copy.pengu_y = self.pengu_y
+        copy.pengu_death = self.pengu_death_x
+        copy.pengu_death_y = self.pengu_death_y
+        return copy
+
 
     def fill_board(self, elements: str, r: int) -> None:
         """Function to populate the data from the input file
-
         Args:
             elements (str): text from a single row parsed from input file
             r (int): number of the row
@@ -39,7 +53,6 @@ class Game:
         iterator = 6
         while iterator > 0:
             move = self.next_valid_random_move()
-            self.moves.append(move)
             self.slide(move)
 
             if self.state == constants.VICTORY or self.state == constants.GAME_OVER:
@@ -48,10 +61,10 @@ class Game:
 
     def slide(self, direction: int) -> None:
         """Implements the slide action
-
         Args:
             direction (int): encoded direction
         """
+        self.moves.append(direction)
         while True:
             if self.next_cell(direction) == Cell.wall:
                 break
@@ -78,35 +91,40 @@ class Game:
 
     def next_valid_random_move(self) -> int:
         """Generates the next valid random move
-
         Returns:
             int: encoded direction value
         """
         available_directions = constants.DIRECTIONS.copy()
         c = random.choice(available_directions)
-        while self.next_cell(c) == Cell.wall:
+        while self.valid_move(c) :
             available_directions.remove(c)
             c = random.choice(available_directions)
         return c
 
+    def valid_move(self, dir: int) -> bool:
+        if self.next_cell(dir) == Cell.wall:
+            return False
+        return True
+
     # helper functions
     def next_cell(self, direction: int) -> Cell:
         """Helper function to check the element if a move is made in the 'direction'
-
         Args:
             direction (int): encoded direction
-
         Returns:
             Cell: Human readable representation of the board element
         """
-        return self.board.get(self.pengu_x + self.directions[direction][0], self.pengu_y + self.directions[direction][1])
+        d = constants.DIRECTION_INDICES[direction]
+        return self.board.get(self.pengu_x + d[0], self.pengu_y + d[1])
 
     def update_next_cell(self, direction: int, toCell: Cell):
-        self.board.update(self.pengu_x + self.directions[direction][0], self.pengu_y + self.directions[direction][1], toCell)
+        d = constants.DIRECTION_INDICES[direction]
+        self.board.update(self.pengu_x + d[0], self.pengu_y + d[1], toCell)
 
     def move_pengu(self, direction: int):
-        self.pengu_x += self.directions[direction][0]
-        self.pengu_y += self.directions[direction][1]
+        d = constants.DIRECTION_INDICES[direction]
+        self.pengu_x += d[0]
+        self.pengu_y += d[1]
 
     def all_moves(self):
         return self.moves

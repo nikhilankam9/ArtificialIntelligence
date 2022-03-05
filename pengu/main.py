@@ -1,6 +1,8 @@
 import os.path
 import sys
 import time
+from typing import final
+from entity.tree import Node, Tree
 from common import constants, common
 from entity import game as g
 
@@ -23,7 +25,11 @@ def main():
     for row, elements in enumerate(input_text[1:]):
         game.fill_board(elements=elements[:-1], r=row)
 
-    game.play()
+    tree = Tree(Node(game))
+    start = time.time()
+    game = tree.BFS()
+    end = time.time()
+    print("Time consumed in working: ",end - start)
 
     with open(sys.argv[2], 'w') as file:
         file.write("".join((map(str, game.all_moves()))) + '\n')
