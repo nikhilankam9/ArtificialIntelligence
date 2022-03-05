@@ -2,7 +2,7 @@ import os.path
 import sys
 import time
 from typing import final
-from entity.tree import Node, Tree
+from entity.tree import Tree
 from common import constants, common
 from entity import game as g
 
@@ -25,8 +25,9 @@ def main():
     for row, elements in enumerate(input_text[1:]):
         game.fill_board(elements=elements[:-1], r=row)
 
-    tree = Tree(Node(game))
+    tree = Tree(game)
     start = time.time()
+    print('Start: ')
     game = tree.BFS()
     end = time.time()
     print("Time consumed in working: ",end - start)

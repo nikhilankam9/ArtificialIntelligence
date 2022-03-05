@@ -40,14 +40,17 @@ class Game:
             elements (str): text from a single row parsed from input file
             r (int): number of the row
         """
+        ll = []
         for c, element in enumerate(elements):
-            self.board.update(r, c, element)
-            if self.board.get(r, c) == Cell.pengu:
-                self.board.update(r, c, Cell.ice) #pengu always starts on ice
+            ll.append(Cell(element))
+            if Cell(element) == Cell.pengu:
+                ll[c] = Cell.ice #pengu always starts on ice
                 self.pengu_x = r
                 self.pengu_y = c
             if Cell(element) == Cell.ice_with_fish:
                 self.total_fish += 1
+        
+        self.board.grid.append(ll)
 
     def play(self):
         iterator = 6
@@ -64,6 +67,10 @@ class Game:
         Args:
             direction (int): encoded direction
         """
+        if not self.valid_move(direction):
+            self.state = constants.INVALID
+            return
+
         self.moves.append(direction)
         while True:
             if self.next_cell(direction) == Cell.wall:

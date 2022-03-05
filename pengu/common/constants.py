@@ -4,3 +4,4 @@ DIRECTION_INDICES = {1: [1, -1], 2: [1,  0], 3: [1,  1], 4: [0, -1], 6: [0,  1],
 BEGIN = "begin"
 GAME_OVER = "game_over"
 VICTORY = "victory"
+INVALID = "INVALID"

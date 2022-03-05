@@ -4,7 +4,7 @@ class Board:
     def __init__(self, r, c) -> None:
         self.row = r
         self.col = c
-        self.grid = [[Cell.empty for _ in range(c)] for _ in range(r)]
+        self.grid = []
 
     def update(self, r, c, element):
         self.grid[r][c] = Cell(element)
@@ -17,8 +17,7 @@ class Board:
 
     def clone(self):
         copy = Board(self.row, self.col)
-        for i in range(self.row):
-            for j in range(self.col):
-                copy.grid[i][j] = self.grid[i][j]
-        
+        for r in self.grid:
+            copy.grid.append(r.copy())
+        # copy.grid = self.grid.copy()
         return copy

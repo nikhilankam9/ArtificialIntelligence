@@ -1,49 +1,38 @@
+from shutil import move
 from entity.game import Game
 from common import constants
 import time
 
-class Node:
-    def __init__(self, game: Game) -> None:
-        self.game = game
-        self.parent = None
-        self.children = []
-
-    def set_parent(self, p):
-        self.parent = p
-    
-    def add_child(self, c):
-        self.children.append(c)
-
 class Tree:
-    def __init__(self, r: Node) -> None:
+    def __init__(self, r: Game) -> None:
         self.root = r
-        self.queue = [r]
+        self.queue = [[]]
 
     def BFS(self):
         while len(self.queue) > 0:
-            current = self.queue.pop(0)
-            # print("curr:")
-            # current.game.print_board()
-            for dir in constants.DIRECTIONS:
-                if not current.game.valid_move(dir):
-                    continue
+            moves = self.queue.pop(0)
+            for dir in constants.DIRECTIONS:                
+                # start = time.time()
+                child = self.root.clone()
+                # end = time.time()
+                # print("Time consumed in working: ",end - start)
                 # time.sleep(1)
-                
-                child = Node(current.game.clone())
-                child.set_parent(current)
-                child.game.slide(dir)
-                current.add_child(child)
 
-                # print(dir, "---")
-                # child.game.print_board()
+                ll = moves.copy()
+                ll.append(dir)
 
-                if child.game.score >= 8:
+                for d in ll:
+                    child.slide(d)
+
+                if child.score >= 8:
                     self.queue = []
-                    print("solution: ", child.game.all_moves())
-                    return child.game
-                elif child.game.state == constants.GAME_OVER:
+                    print("solution: ", child.all_moves())
+                    return child
+                elif child.state == constants.GAME_OVER or child.state == constants.INVALID:
                     pass
                 else:
-                    self.queue.append(child)
+                    # print(dir, "---", moves)
+                    # child.print_board()
+                    self.queue.append(ll)
 
-        return self.root.game
+        # return self.root
