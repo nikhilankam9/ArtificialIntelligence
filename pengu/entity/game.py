@@ -14,6 +14,7 @@ class Game:
     pengu_y = -1
     pengu_death_x = -1
     pengu_death_y = -1
+    fishs = []
 
     def __init__(self, r, c) -> None:
         self.row = r
@@ -40,17 +41,18 @@ class Game:
             elements (str): text from a single row parsed from input file
             r (int): number of the row
         """
-        ll = []
+        col_cells = []
         for c, element in enumerate(elements):
-            ll.append(Cell(element))
+            col_cells.append(Cell(element))
             if Cell(element) == Cell.pengu:
-                ll[c] = Cell.ice #pengu always starts on ice
+                col_cells[c] = Cell.ice #pengu always starts on ice
                 self.pengu_x = r
                 self.pengu_y = c
             if Cell(element) == Cell.ice_with_fish:
                 self.total_fish += 1
+                self.fishs.append([r, c])
         
-        self.board.grid.append(ll)
+        self.board.grid.append(col_cells)
 
     def play(self):
         iterator = 6
