@@ -24,8 +24,10 @@ class Tree:
                     self.queue = []
                     print("solution: ", child.all_moves())
                     return child
-                elif child.state == constants.GAME_OVER or child.state == constants.INVALID:
+                
+                if child.state == constants.GAME_OVER or child.state == constants.INVALID:
                     pass
                 else:
                     self.queue.append(ll)
+                    
         return self.root
