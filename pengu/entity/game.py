@@ -14,7 +14,6 @@ class Game:
     pengu_y = -1
     pengu_death_x = -1
     pengu_death_y = -1
-    fishs = []
 
     def __init__(self, r, c) -> None:
         self.row = r
@@ -50,7 +49,6 @@ class Game:
                 self.pengu_y = c
             if Cell(element) == Cell.ice_with_fish:
                 self.total_fish += 1
-                self.fishs.append([r, c])
         
         self.board.grid.append(col_cells)
 
