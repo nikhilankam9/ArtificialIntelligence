@@ -2,6 +2,7 @@ import random
 from entity.board import Board
 from common import constants
 from common.common import Cell
+import time
 
 class Game:
     """Game class: Defines the game pengu and enables playing it.
@@ -21,6 +22,10 @@ class Game:
         self.board = Board(r, c)
 
     def clone(self):
+        """Clone the game object
+        Returns:
+            Game: Cloned game object
+        """
         copy = Game(self.row, self.col)
         copy.score = self.score
         copy.total_fish = self.total_fish
@@ -53,26 +58,25 @@ class Game:
         self.board.grid.append(col_cells)
 
     def play(self):
-        iterator = 6
-        while iterator > 0:
-            move = self.next_valid_random_move()
+        list = [8, 6, 2, 4]
+        self.print_board()
+        for move in list:
+            time.sleep(1)
             self.slide(move)
+            self.print_board()
 
-            if self.state == constants.VICTORY or self.state == constants.GAME_OVER:
-                break
-            iterator -= 1
-
-    def slide(self, direction: int) -> None:
-        """Implements the slide action
+    def slide(self, direction: int):
+        """Implements the slide action for the pengu
         Args:
             direction (int): encoded direction
+        Returns:
+            List: Returns the locations of the fish that the pengu gathered by moving the direction.
         """
         self.moves.append(direction)
-        returnList = []
+        gatheredFishLoc = []
         if not self.valid_move(direction):
             self.state = constants.INVALID
-            return returnList
-
+            return gatheredFishLoc
 
         while True:
             if self.next_cell(direction) == Cell.wall:
@@ -84,7 +88,7 @@ class Game:
                     self.state = constants.VICTORY
                 self.update_next_cell(direction, Cell.ice)
                 d = constants.DIRECTION_INDICES[direction]
-                returnList.append([self.pengu_x + d[0], self.pengu_y + d[1]])
+                gatheredFishLoc.append([self.pengu_x + d[0], self.pengu_y + d[1]])
                 self.move_pengu(direction)
 
             elif self.next_cell(direction) == Cell.ice:
@@ -100,7 +104,7 @@ class Game:
                 self.move_pengu(direction)
                 break
         
-        return returnList
+        return gatheredFishLoc
 
     def next_valid_random_move(self) -> int:
         """Generates the next valid random move
@@ -131,15 +135,28 @@ class Game:
         return self.board.get(self.pengu_x + d[0], self.pengu_y + d[1])
 
     def update_next_cell(self, direction: int, toCell: Cell):
+        """Updates the next cell of the game board
+        Args:
+            direction (int): encoded direction
+            toCell (Cell): The value that is updated to.
+        """
         d = constants.DIRECTION_INDICES[direction]
         self.board.update(self.pengu_x + d[0], self.pengu_y + d[1], toCell)
 
     def move_pengu(self, direction: int):
+        """Make the pengu move one step in the given direction
+        Args:
+            direction (int): encoded direction
+        """
         d = constants.DIRECTION_INDICES[direction]
         self.pengu_x += d[0]
         self.pengu_y += d[1]
 
     def all_moves(self):
+        """All the moves that the pengu made up until now
+        Returns:
+            List: Moves
+        """
         return self.moves
 
     def record_pengu_death(self):

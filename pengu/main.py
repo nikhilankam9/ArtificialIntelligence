@@ -25,11 +25,7 @@ def main():
         game.fill_board(elements=elements[:-1], r=row)
 
     tree = Tree(game)
-    start = time.time()
-    print('Start: ')
     game = tree.BFS()
-    end = time.time()
-    print("Time consumed in working: ",end - start)
 
     with open(sys.argv[2], 'w') as file:
         file.write("".join((map(str, game.all_moves()))) + '\n')
