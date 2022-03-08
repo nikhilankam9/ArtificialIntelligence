@@ -1,10 +1,9 @@
 import os.path
 import sys
 import time
-from typing import final
 from entity.tree import Tree
 from common import constants, common
-from entity import game as g
+from entity.game import Game
 
 input_text = []
 
@@ -21,7 +20,7 @@ def main():
     if len(input_text) == 0:
         sys.exit('ERROR: invalid input file')
 
-    game = g.Game(int(input_text[0].split(' ')[0]), int(input_text[0].split(' ')[1]))
+    game = Game(int(input_text[0].split(' ')[0]), int(input_text[0].split(' ')[1]))
     for row, elements in enumerate(input_text[1:]):
         game.fill_board(elements=elements[:-1], r=row)
 

@@ -67,11 +67,13 @@ class Game:
         Args:
             direction (int): encoded direction
         """
+        self.moves.append(direction)
+        returnList = []
         if not self.valid_move(direction):
             self.state = constants.INVALID
-            return
+            return returnList
 
-        self.moves.append(direction)
+
         while True:
             if self.next_cell(direction) == Cell.wall:
                 break
@@ -81,6 +83,8 @@ class Game:
                 if self.score == self.total_fish:
                     self.state = constants.VICTORY
                 self.update_next_cell(direction, Cell.ice)
+                d = constants.DIRECTION_INDICES[direction]
+                returnList.append([self.pengu_x + d[0], self.pengu_y + d[1]])
                 self.move_pengu(direction)
 
             elif self.next_cell(direction) == Cell.ice:
@@ -95,6 +99,8 @@ class Game:
             elif self.next_cell(direction) == Cell.snow:
                 self.move_pengu(direction)
                 break
+        
+        return returnList
 
     def next_valid_random_move(self) -> int:
         """Generates the next valid random move
