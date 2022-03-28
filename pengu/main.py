@@ -25,7 +25,7 @@ def main():
         game.fill_board(elements=elements[:-1], r=row)
 
     tree = Tree(game)
-    game = tree.ID_search()
+    game = tree.BFS_best_first()
 
     with open(sys.argv[2], 'w') as file:
         file.write("".join((map(str, game.all_moves()))) + '\n')
