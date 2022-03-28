@@ -8,36 +8,36 @@ import time
 # References: https://stackoverflow.com/a/8875823/7434711
 
 class TreePQNode:
-    """Class to hold moves and score as the tree node.
+    """Class to hold cost and heuristic as the tree node.
     """
-    def __init__(self, moves, score) -> None:
-        """Initialize class with moves and score
+    def __init__(self, cost, heuristic) -> None:
+        """Initialize class with moves as cost and score as heuristic
 
         Args:
             moves (list): list of moves
             score (int): score obtained from the moves
         """
-        self.moves = moves.copy()
-        self.score = score
+        self.cost = cost.copy()
+        self.heuristic = heuristic
 
 class Tree:
     """Class to define the game tree i.e the possible states of the game 
     """
-    def __init__(self, r: Game, heuristic=lambda x: -x) -> None:
+    def __init__(self, r: Game, pq_compare=lambda x: x) -> None:
         """Initialize the tree object, a game object is required to init.
 
         Args:
             r (Game): The initial state of the game is considered as the root.
-            heuristic=lambda x: -x: Heuristic to return the largest priority element.
+            pq_compare=lambda x: x: To return the largest priority element with least score.
 
             priority_queue is used to leverage the heapq python library.
 
         """
         self.root = r
 
-        self.heuristic = heuristic
+        self.pq_compare = pq_compare
         self.index = 0 #To avoid clashes when the evaluated key value is a draw and the stored value is not directly comparable
-        self.priority_queue = []
+        self.priority_queue = [] # FIFO queue for Best first and A* search algorithms
         self.pq_push(TreePQNode([], 0))
 
         self.px = r.pengu_x
@@ -50,27 +50,32 @@ class Tree:
         It pushes an tree node to the priority_queue using the current achieved score as the priority
         i.e the path that leads to highest score is given highest score.
 
+        self.pq_compare: Is used to order the priorities of the elements in the queue.
         self.index: Autoincrement integer to value to avoid clashes when the heap element is not comparable.
 
         Args:
             tree_node (TreePQNode): Tree node that holds the current sequence of moves along with the score achieved.
         """
-        pq.heappush(self.priority_queue, (self.heuristic(tree_node.score), self.index, tree_node))
+        # path cost = cost + heuristic
+        pq.heappush(self.priority_queue, (self.pq_compare(tree_node.heuristic * 2 + len(tree_node.cost)), self.index, tree_node))
         self.index += 1 # auto-increment index
 
     def pq_pop(self):
         """Wrapper function to abstract heappop operation.
-        It pops the tree node with highest priority(score) and returns the equivalent tree node.
+        It pops the tree node with highest priority and returns the equivalent tree node.
 
         Returns:
             TreePQNode: Tree node with the highest priority.
         """
         return pq.heappop(self.priority_queue)[2]
 
-    def BFS_best_first(self):
-        """Greedy best first search
-        The greedy property in this algorithm is that the highest score achieved by doing the possible 8 moves
-        yeilds the better solution.
+    def A_star_search(self):
+        """A* (A star) search algorithm
+        
+        Cost: length of moves taken to reach the current game state.
+        Heuristic: Total number of fish remaning to reach the goal state(total_fish - score)
+        Path cost: Cost + Heuristic = len(moves) + (total_fish - score)
+            Greedy property: Minimize the path cost, priority queue to pick lowest path cost first.
 
         Pruning: Only valid(pengu state changes) moves and moves that already did not end in a GAME_OVER state are considered.
 
@@ -81,35 +86,62 @@ class Tree:
             curr = self.pq_pop()
             child = self.root
             for dir in constants.DIRECTIONS:
-                ll = curr.moves.copy()
+                ll = curr.cost.copy()
                 ll.append(dir)
 
                 changes = []
                 for d in ll:
                     changes += child.slide(d)
 
-                if child.score >= 20:
+                if child.state == constants.VICTORY:
                     print("solution: ", child.all_moves(), child.score)
                     return child
                 
                 if child.state == constants.GAME_OVER or child.state == constants.INVALID:
                     pass
                 else:
-                    # print(child.all_moves(), child.score)
-                    self.pq_push(TreePQNode(child.all_moves(), child.score))
+                    print(child.all_moves(), len(child.all_moves()), child.total_fish - child.score)
+                    self.pq_push(TreePQNode(child.all_moves(), child.total_fish - child.score))
                 
-                # revert action
-                child.pengu_death_x = -1
-                child.pengu_death_y = -1
-                child.pengu_x = self.px
-                child.pengu_y = self.py
-                child.score  = 0
-                child.moves = []
-                child.state = constants.BEGIN
-                for c in changes:
-                    child.board.grid[c[0]][c[1]] = Cell.ice_with_fish
+                child.reset(changes, self.px, self.py)
         
         return self.root
+
+    def BFS_best_first(self):
+        """Greedy best first search
+        The greedy property in this algorithm is that the highest score achieved by doing the possible 8 moves
+        yeilds the better solution.
+
+        Heuristic: use pq_compare=lambda x: -x: to make the current move with highest score as largest priority element.
+        Pruning: Only valid(pengu state changes) moves and moves that already did not end in a GAME_OVER state are considered.
+
+        Returns:
+            Game: Returns the game state that achieved the desired result.
+        """
+        while len(self.priority_queue) > 0:
+            curr = self.pq_pop()
+            child = self.root
+            for dir in constants.DIRECTIONS:
+                ll = curr.cost.copy()
+                ll.append(dir)
+
+                changes = []
+                for d in ll:
+                    changes += child.slide(d)
+
+                if child.state == constants.VICTORY:
+                    return child
+                
+                if child.state == constants.GAME_OVER or child.state == constants.INVALID:
+                    pass
+                else:
+                    #make sure to push only score to the priority queue(highest score = highest priority)
+                    self.pq_push(TreePQNode(child.all_moves(), child.score))
+                
+                child.reset(changes, self.px, self.py)
+        
+        return self.root
+
 
     def DFS_bounded(self, depth: int):
         """DFS implementation with a bound(depth) limit where each stack element is a 
@@ -149,16 +181,7 @@ class Tree:
                             # print(depth, len(ll), ll)
                             self.stack.append(ll)
 
-            # revert action
-            child.pengu_death_x = -1
-            child.pengu_death_y = -1
-            child.pengu_x = self.px
-            child.pengu_y = self.py
-            child.score  = 0
-            child.moves = []
-            child.state = constants.BEGIN
-            for c in changes:
-                child.board.grid[c[0]][c[1]] = Cell.ice_with_fish     
+            child.reset(changes, self.px, self.py)
         
     def ID_search(self):
         """Iterative deepening search implemention.
@@ -204,15 +227,6 @@ class Tree:
                 else:
                     self.queue.append(ll)
                 
-                # revert action
-                child.pengu_death_x = -1
-                child.pengu_death_y = -1
-                child.pengu_x = self.px
-                child.pengu_y = self.py
-                child.score  = 0
-                child.moves = []
-                child.state = constants.BEGIN
-                for c in changes:
-                    child.board.grid[c[0]][c[1]] = Cell.ice_with_fish
+                child.reset(changes, self.px, self.py)
                     
         return self.root
