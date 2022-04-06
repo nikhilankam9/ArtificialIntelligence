@@ -25,7 +25,9 @@ def main():
         game.fill_board(elements=elements[:-1], r=row)
 
     tree = Tree(game)
-    game = tree.BFS_best_first()
+    s = time.time()
+    game = tree.A_star_search()
+    print(time.time() - s)
 
     with open(sys.argv[2], 'w') as file:
         file.write("".join((map(str, game.all_moves()))) + '\n')

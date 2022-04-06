@@ -166,6 +166,17 @@ class Game:
     def pengu_location(self):
         return self.pengu_x, self.pengu_y
 
+    def reset(self, changes, px, py):
+        self.pengu_death_x = -1
+        self.pengu_death_y = -1
+        self.pengu_x = px
+        self.pengu_y = py
+        self.score  = 0
+        self.moves = []
+        self.state = constants.BEGIN
+        for c in changes:
+            self.board.grid[c[0]][c[1]] = Cell.ice_with_fish
+
     # utility functions
     def info(self) -> None:
         print("Rows:", self.row)
